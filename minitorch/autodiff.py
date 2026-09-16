@@ -22,8 +22,14 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
     Returns:
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
-    # TODO: Implement for Task 1.1.
-    raise NotImplementedError("Need to implement for Task 1.1")
+    # result = (f(x + epsilon) - f(x - epsilon)) / (2 * epsilon)
+    vals_p = list(vals)
+    vals_m = list(vals)
+
+    vals_p[arg] += epsilon
+    vals_m[arg] -= epsilon
+
+    return (f(*vals_p) - f(*vals_m)) / (2 * epsilon)
 
 
 variable_count = 1
@@ -61,8 +67,25 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    visited = set()
+    order = []
+
+    def visit(var: Variable) -> None:
+        if var.unique_id in visited:
+            return
+        if var.is_constant():
+            return
+
+        visited.add(var.unique_id)
+
+        for parent in var.parents:
+            visit(parent)
+
+        order.append(var)
+
+    visit(variable)
+
+    return reversed(order)
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -76,8 +99,18 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    derivatives = {variable.unique_id: deriv}
+    for var in topological_sort(variable):
+        d_output = derivatives[var.unique_id]
+
+        if var.is_leaf():
+            var.accumulate_derivative(d_output)
+        else:
+            for parent, d_parent in var.chain_rule(d_output):
+                if parent.unique_id not in derivatives:
+                    derivatives[parent.unique_id] = 0.0
+
+                derivatives[parent.unique_id] += d_parent
 
 
 @dataclass
